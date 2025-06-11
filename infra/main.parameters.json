@@ -1,0 +1,21 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "environmentName": {
+      "value": "${AZURE_ENV_NAME=sora-dev}"
+    },
+    "location": {
+      "value": "${AZURE_LOCATION=eastus}"
+    },
+    "azureOpenAIEndpoint": {
+      "value": "${AZURE_OPENAI_ENDPOINT=https://ropreddy-4024-resource.cognitiveservices.azure.com}"
+    },
+    "azureOpenAIApiKey": {
+      "value": "${AZURE_OPENAI_API_KEY}"
+    },
+    "azureOpenAIApiVersion": {
+      "value": "${AZURE_OPENAI_API_VERSION=preview}"
+    }
+  }
+}

@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Job Status - Sora Video Generator</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Arial', sans-serif;
+        }
+        .main-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+        }
+        .btn-primary {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            border: none;
+            border-radius: 25px;
+            padding: 12px 30px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+        .btn-outline-secondary {
+            border-radius: 25px;
+            padding: 12px 30px;
+            font-weight: 600;
+        }
+        .icon-wrapper {
+            background: linear-gradient(45deg, #ffc107, #fd7e14);
+            border-radius: 50%;
+            width: 80px;
+            height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 30px;
+        }
+        .info-card {
+            background: #f8f9fa;
+            border-radius: 15px;
+            border: 2px solid #e9ecef;
+        }
+        .video-container {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+        .video-container video {
+            width: 100%;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+        .spinner-border {
+            width: 3rem;
+            height: 3rem;
+        }
+        .status-pending {
+            color: #ffc107;
+        }
+        .status-completed {
+            color: #28a745;
+        }
+        .status-failed {
+            color: #dc3545;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid d-flex align-items-center justify-content-center min-vh-100 py-5">
+        <div class="main-container p-5 w-100" style="max-width: 800px;">
+            <div class="text-center mb-5">
+                <div class="icon-wrapper">
+                    <i class="fas fa-search text-white fa-2x"></i>
+                </div>
+                <h1 class="display-4 fw-bold text-dark mb-3">Job Status</h1>
+                <p class="lead text-muted">Checking the status of your video generation</p>
+            </div>
+
+            <!-- Loading State -->
+            <div id="loadingState" class="text-center mb-4">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-3 text-muted">Checking job status...</p>
+            </div>
+
+            <!-- Status Display -->
+            <div id="statusDisplay" class="d-none">
+                <div class="info-card p-4 mb-4">
+                    <h5 class="fw-bold text-dark mb-3">
+                        <i class="fas fa-info-circle me-2"></i>Job Information
+                    </h5>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <strong>Job ID:</strong>
+                            <code th:text="${jobId}" id="jobIdDisplay" class="ms-2"></code>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <strong>Status:</strong>
+                            <span id="statusBadge" class="badge ms-2"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Video Display (shown when completed) -->
+                <div id="videoContainer" class="text-center mb-4 d-none">
+                    <h5 class="fw-bold text-dark mb-3">
+                        <i class="fas fa-video me-2"></i>Your Generated Video
+                    </h5>
+                    <div class="video-container">
+                        <video id="generatedVideo" controls preload="metadata">
+                            <source id="videoSource" type="video/mp4">
+                            Your browser does not support the video tag.
+                        </video>
+                    </div>                    <div class="mt-3">
+                        <a id="downloadLink" href="#" download="sora-video.mp4" class="btn btn-success btn-lg me-2">
+                            <i class="fas fa-download me-2"></i>Download Video
+                        </a>
+                        <a id="watchLink" href="#" target="_blank" class="btn btn-outline-primary btn-lg">
+                            <i class="fas fa-external-link-alt me-2"></i>Open in New Tab
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Error Display -->
+                <div id="errorContainer" class="alert alert-danger d-none" role="alert">
+                    <i class="fas fa-exclamation-triangle me-3"></i>
+                    <div id="errorMessage"></div>
+                </div>
+
+                <!-- Pending Message -->
+                <div id="pendingContainer" class="alert alert-info d-none" role="alert">
+                    <i class="fas fa-clock me-3"></i>
+                    <div>Your video is still being generated. This usually takes 2-5 minutes. The page will automatically refresh every 10 seconds.</div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+                <button onclick="checkStatus()" class="btn btn-primary btn-lg px-4" id="refreshBtn">
+                    <i class="fas fa-sync-alt me-2"></i>Refresh Status
+                </button>
+                <a th:href="@{/}" class="btn btn-outline-secondary btn-lg px-4">
+                    <i class="fas fa-home me-2"></i>Generate New Video
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script th:inline="javascript">
+        const jobId = /*[[${jobId}]]*/ 'unknown';
+        let autoRefreshInterval;
+
+        function checkStatus() {
+            document.getElementById('loadingState').classList.remove('d-none');
+            document.getElementById('statusDisplay').classList.add('d-none');
+            
+            fetch(`/api/status/${jobId}`)
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('loadingState').classList.add('d-none');
+                    document.getElementById('statusDisplay').classList.remove('d-none');
+                    
+                    updateStatusDisplay(data);
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    document.getElementById('loadingState').classList.add('d-none');
+                    document.getElementById('statusDisplay').classList.remove('d-none');
+                    showError('Failed to check job status. Please try again.');
+                });
+        }
+
+        function updateStatusDisplay(data) {
+            const statusBadge = document.getElementById('statusBadge');
+            const videoContainer = document.getElementById('videoContainer');
+            const errorContainer = document.getElementById('errorContainer');
+            const pendingContainer = document.getElementById('pendingContainer');
+            
+            // Hide all containers first
+            videoContainer.classList.add('d-none');
+            errorContainer.classList.add('d-none');
+            pendingContainer.classList.add('d-none');
+            
+            // Clear auto-refresh
+            if (autoRefreshInterval) {
+                clearInterval(autoRefreshInterval);
+            }            if (data.success) {
+                statusBadge.textContent = data.status || 'Unknown';
+                  if ((data.status === 'completed' || data.status === 'succeeded') && 
+                    (data.videoUrl || data.generationId)) {
+                    statusBadge.className = 'badge bg-success ms-2';
+                    showVideo(data.videoUrl, data.generationId);
+                } else if (data.status === 'failed') {
+                    statusBadge.className = 'badge bg-danger ms-2';
+                    showError('Video generation failed. Please try generating a new video.');
+                } else {
+                    // Still pending
+                    statusBadge.className = 'badge bg-warning ms-2';
+                    pendingContainer.classList.remove('d-none');
+                    // Auto-refresh every 10 seconds
+                    autoRefreshInterval = setInterval(checkStatus, 10000);
+                }
+            } else {
+                showError(data.message || 'Unknown error occurred');
+            }
+        }        function showVideo(videoUrl, generationId) {
+            const videoContainer = document.getElementById('videoContainer');
+            const videoSource = document.getElementById('videoSource');
+            const downloadLink = document.getElementById('downloadLink');
+            const watchLink = document.getElementById('watchLink');
+            
+            // Always use our download endpoint for proper file download
+            downloadLink.href = `/api/download/${jobId}`;
+            
+            // For display purposes, try to show the video if we have a direct URL
+            if (videoUrl && videoUrl !== 'available') {
+                videoSource.src = videoUrl;
+                watchLink.href = videoUrl;
+                document.getElementById('generatedVideo').load();
+            } else {
+                // If no direct URL, hide the video player but keep download available
+                document.getElementById('generatedVideo').style.display = 'none';
+                watchLink.style.display = 'none';
+            }
+            
+            videoContainer.classList.remove('d-none');
+        }
+
+        function showError(message) {
+            const errorContainer = document.getElementById('errorContainer');
+            const errorMessage = document.getElementById('errorMessage');
+            
+            errorMessage.textContent = message;
+            errorContainer.classList.remove('d-none');
+        }
+
+        // Check status on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            checkStatus();
+        });
+
+        // Clean up interval when page is hidden
+        document.addEventListener('visibilitychange', function() {
+            if (document.hidden && autoRefreshInterval) {
+                clearInterval(autoRefreshInterval);
+            } else if (!document.hidden && autoRefreshInterval) {
+                checkStatus();
+            }
+        });
+    </script>
+</body>
+</html>

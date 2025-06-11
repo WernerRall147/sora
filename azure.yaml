@@ -1,0 +1,20 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/Azure/azure-dev/main/schemas/v1.0/azure.yaml.json
+
+name: sora-video-generator
+metadata:
+  template: sora-video-generator@0.0.1-beta
+
+services:
+  sora-video-generator:
+    project: .
+    language: java
+    host: containerapp
+
+infra:
+  provider: bicep
+  path: infra
+
+pipeline:
+  variables:
+    - AZURE_OPENAI_ENDPOINT
+    - AZURE_OPENAI_API_KEY

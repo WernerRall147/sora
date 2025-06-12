@@ -131,10 +131,9 @@
                             </div>                            <small class="form-text text-muted mt-1" id="durationHelp">
                                 <i class="fas fa-info-circle me-1"></i>
                                 Choose between 1-20 seconds
-                            </small>
-                            <div class="alert alert-warning mt-2" id="durationWarning" style="display: none;">
+                            </small>                            <div class="alert alert-warning mt-2" id="durationWarning" style="display: none;">
                                 <i class="fas fa-exclamation-triangle me-2"></i>
-                                <strong>Note:</strong> 1920x1080 resolution supports maximum 19 seconds duration.
+                                <strong>Note:</strong> 1920x1080 resolution supports maximum 10 seconds duration.
                             </div>
                         </div>
                     </div>
@@ -203,16 +202,15 @@
             const durationHelp = document.getElementById('durationHelp');
             
             const selectedResolution = resolutionSelect.value;
-            
-            if (selectedResolution === '1920x1080') {
-                // 1920x1080 has maximum 19 seconds
-                durationInput.max = '19';
+              if (selectedResolution === '1920x1080') {
+                // 1920x1080 has maximum 10 seconds
+                durationInput.max = '10';
                 durationWarning.style.display = 'block';
-                durationHelp.innerHTML = '<i class="fas fa-info-circle me-1"></i>Choose between 1-19 seconds (1920x1080 limitation)';
+                durationHelp.innerHTML = '<i class="fas fa-info-circle me-1"></i>Choose between 1-10 seconds (1920x1080 limitation)';
                 
-                // If current duration exceeds 19, reset to 19
-                if (parseInt(durationInput.value) > 19) {
-                    durationInput.value = '19';
+                // If current duration exceeds 10, reset to 10
+                if (parseInt(durationInput.value) > 10) {
+                    durationInput.value = '10';
                 }
             } else {
                 // All other resolutions support up to 20 seconds
@@ -239,11 +237,10 @@
                         const resolutionSelect = document.getElementById('resolution');
                         const durationInput = document.getElementById('duration');
                         const duration = parseInt(durationInput.value);
-                        
-                        if (resolutionSelect.value === '1920x1080' && duration > 19) {
+                          if (resolutionSelect.value === '1920x1080' && duration > 10) {
                             event.preventDefault();
                             event.stopPropagation();
-                            alert('Error: 1920x1080 resolution does not support 20 seconds duration. Maximum duration is 19 seconds.');
+                            alert('Error: 1920x1080 resolution does not support more than 10 seconds duration. Maximum duration is 10 seconds.');
                             durationInput.focus();
                             return;
                         }

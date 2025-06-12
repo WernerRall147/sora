@@ -91,7 +91,7 @@ public class VideoRequest {
 @Retention(RetentionPolicy.RUNTIME)
 @Constraint(validatedBy = DurationForResolutionValidator.class)
 @interface ValidDurationForResolution {
-    String message() default "1920x1080 resolution does not support 20 seconds duration. Maximum duration is 19 seconds.";
+    String message() default "1920x1080 resolution does not support more than 10 seconds duration. Maximum duration is 10 seconds.";
     Class<?>[] groups() default {};
     Class<? extends Payload>[] payload() default {};
 }
@@ -111,9 +111,8 @@ class DurationForResolutionValidator implements ConstraintValidator<ValidDuratio
         if (request == null || request.getResolution() == null || request.getDuration() == null) {
             return true; // Let other validators handle null values
         }
-        
-        // Check if 1920x1080 resolution with duration > 19
-        if ("1920x1080".equals(request.getResolution()) && request.getDuration() > 19) {
+          // Check if 1920x1080 resolution with duration > 10
+        if ("1920x1080".equals(request.getResolution()) && request.getDuration() > 10) {
             return false;
         }
         

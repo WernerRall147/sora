@@ -128,11 +128,14 @@
                                    style="border-radius: 15px; border: 2px solid #e9ecef;">
                             <div class="invalid-feedback">
                                 Duration must be between 1 and 20 seconds.
-                            </div>
-                            <small class="form-text text-muted mt-1">
+                            </div>                            <small class="form-text text-muted mt-1" id="durationHelp">
                                 <i class="fas fa-info-circle me-1"></i>
                                 Choose between 1-20 seconds
                             </small>
+                            <div class="alert alert-warning mt-2" id="durationWarning" style="display: none;">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                <strong>Note:</strong> 1920x1080 resolution supports maximum 19 seconds duration.
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -190,17 +193,61 @@
                 </div>
             </div>
         </div>
-    </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    </div>    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+        // Duration restriction handler
+        function updateDurationRestrictions() {
+            const resolutionSelect = document.getElementById('resolution');
+            const durationInput = document.getElementById('duration');
+            const durationWarning = document.getElementById('durationWarning');
+            const durationHelp = document.getElementById('durationHelp');
+            
+            const selectedResolution = resolutionSelect.value;
+            
+            if (selectedResolution === '1920x1080') {
+                // 1920x1080 has maximum 19 seconds
+                durationInput.max = '19';
+                durationWarning.style.display = 'block';
+                durationHelp.innerHTML = '<i class="fas fa-info-circle me-1"></i>Choose between 1-19 seconds (1920x1080 limitation)';
+                
+                // If current duration exceeds 19, reset to 19
+                if (parseInt(durationInput.value) > 19) {
+                    durationInput.value = '19';
+                }
+            } else {
+                // All other resolutions support up to 20 seconds
+                durationInput.max = '20';
+                durationWarning.style.display = 'none';
+                durationHelp.innerHTML = '<i class="fas fa-info-circle me-1"></i>Choose between 1-20 seconds';
+            }
+        }
+
         // Form validation
         (function() {
             'use strict';
             window.addEventListener('load', function() {
+                // Initialize duration restrictions
+                updateDurationRestrictions();
+                
+                // Add event listener for resolution changes
+                document.getElementById('resolution').addEventListener('change', updateDurationRestrictions);
+                
                 var forms = document.getElementsByClassName('needs-validation');
                 var validation = Array.prototype.filter.call(forms, function(form) {
                     form.addEventListener('submit', function(event) {
+                        // Additional validation for duration restrictions
+                        const resolutionSelect = document.getElementById('resolution');
+                        const durationInput = document.getElementById('duration');
+                        const duration = parseInt(durationInput.value);
+                        
+                        if (resolutionSelect.value === '1920x1080' && duration > 19) {
+                            event.preventDefault();
+                            event.stopPropagation();
+                            alert('Error: 1920x1080 resolution does not support 20 seconds duration. Maximum duration is 19 seconds.');
+                            durationInput.focus();
+                            return;
+                        }
+                        
                         if (form.checkValidity() === false) {
                             event.preventDefault();
                             event.stopPropagation();

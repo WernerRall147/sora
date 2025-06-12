@@ -23,11 +23,11 @@ public class AzureOpenAIConfig {
     
     @Bean
     public WebClient azureOpenAIWebClient() {
-        // Configure larger memory size for handling video responses
+        // Configure larger memory size for handling video responses (100MB)
         ExchangeStrategies strategies = ExchangeStrategies.builder()
-            .codecs(codecs -> codecs.defaultCodecs().maxInMemorySize(10 * 1024 * 1024)) // 10MB
+            .codecs(codecs -> codecs.defaultCodecs().maxInMemorySize(100 * 1024 * 1024)) // 100MB
             .build();
-            
+
         return WebClient.builder()
             .baseUrl(azureOpenAIEndpoint)
             .defaultHeader("Content-Type", "application/json")

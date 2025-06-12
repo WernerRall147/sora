@@ -1,12 +1,14 @@
 # Sora Video Generator
 
-A Java Spring Boot web application that generates Sora videos using Azure OpenAI API. This application provides a user-friendly web interface for creating AI-generated videos with fixed technical parameters (1080x1080, 5 seconds).
+A Java Spring Boot web application that generates Sora videos using Azure OpenAI API. This application provides a user-friendly web interface for creating AI-generated videos with **configurable video specifications** including resolution and duration.
 
 ## Features
 
 - 🎥 **Video Generation**: Create videos using Azure OpenAI's Sora model
+- ⚙️ **Configurable Specifications**: Choose from 9 supported resolutions and duration (1-20 seconds)
+- 🔧 **Smart Validation**: Automatic restrictions for resolution-specific limitations (e.g., 1920x1080 max 10 seconds)
 - 🖥️ **Web Interface**: Modern, responsive UI built with Bootstrap and Thymeleaf
-- ⚡ **Reactive Architecture**: Built with Spring WebFlux for optimal performance
+- ⚡ **Reactive Architecture**: Built with Spring WebFlux for optimal performance with 100MB buffer for large video downloads
 - 🔒 **Secure**: Uses Azure managed identity for authentication in production
 - 📊 **Monitoring**: Includes health checks and logging for production deployment
 - 🚀 **Container Ready**: Dockerized for easy deployment to Azure Container Apps
@@ -136,19 +138,45 @@ This application is designed to be deployed to Azure Container Apps using Azure 
 
 ### Video Generation Parameters
 
-The application uses fixed parameters for video generation:
-- **Resolution**: 1080x1080 pixels
-- **Duration**: 5 seconds
-- **Variants**: 1
-- **Model**: Sora
+The application supports configurable parameters for video generation:
+
+#### **Supported Resolutions**
+- 480x480 (Square - Small)
+- 480x854 (Portrait)
+- 854x480 (Landscape)
+- 720x720 (Square - HD)
+- 720x1280 (Portrait - HD)
+- 1280x720 (Landscape - HD)
+- 1080x1080 (Square - Full HD) - *Default*
+- 1080x1920 (Portrait - Full HD)
+- 1920x1080 (Landscape - Full HD) - *Limited to 10 seconds max*
+
+#### **Duration Settings**
+- **Standard Resolutions**: 1-20 seconds
+- **1920x1080 Resolution**: 1-10 seconds (API limitation)
+- **Default**: 5 seconds
+
+#### **Other Parameters**
+- **Variants**: 1 (fixed)
+- **Model**: Sora (latest)
 
 ## Usage
 
 1. **Access the web interface** at your deployed URL or `http://localhost:8080`
 2. **Enter a prompt** describing the video you want to generate
-3. **Click "Generate Video"** to start the process
-4. **Check the status** of your video generation job
-5. **Download the video** once generation is complete
+3. **Select resolution** from the dropdown (9 options available)
+4. **Set duration** between 1-20 seconds (or 1-10 for 1920x1080)
+5. **Click "Generate Video"** to start the process
+6. **Check the status** of your video generation job
+7. **Download the video** once generation is complete
+
+### Video Specification Guidelines
+
+- **Square formats** (480x480, 720x720, 1080x1080): Best for social media posts
+- **Portrait formats** (480x854, 720x1280, 1080x1920): Ideal for mobile content and stories
+- **Landscape formats** (854x480, 1280x720, 1920x1080): Perfect for traditional video content
+- **Duration recommendations**: Start with shorter durations (5-10 seconds) for better quality
+- **1920x1080 limitation**: Maximum 10 seconds due to API restrictions
 
 ## API Endpoints
 
@@ -207,10 +235,11 @@ src/
 
 ### Key Components
 
-- **VideoController**: Handles web requests and form submissions
-- **SoraVideoService**: Manages video generation API calls
-- **AzureOpenAIConfig**: Configuration for Azure OpenAI WebClient
-- **Model Classes**: Request/response DTOs for API communication
+- **VideoController**: Handles web requests and form submissions with configurable video specifications
+- **SoraVideoService**: Manages video generation API calls with user-selected parameters
+- **AzureOpenAIConfig**: Configuration for Azure OpenAI WebClient with 100MB buffer for large video downloads
+- **Model Classes**: Request/response DTOs with validation for resolution-duration combinations
+- **Custom Validation**: Enforces API restrictions (e.g., 1920x1080 max 10 seconds)
 
 ## Troubleshooting
 
@@ -230,6 +259,16 @@ src/
    - Video generation can take 2-5 minutes
    - Check job status regularly
    - Ensure adequate timeout settings
+
+4. **Video Download Buffer Errors**
+   - Application configured with 100MB buffer for large video files
+   - If encountering buffer limit issues, videos may be too large
+   - Try shorter durations or lower resolutions
+
+5. **Resolution-Duration Restrictions**
+   - 1920x1080 resolution limited to maximum 10 seconds
+   - Frontend automatically enforces these restrictions
+   - Backend validation prevents invalid combinations
 
 ### Logs
 

@@ -3,6 +3,7 @@ package com.example.soravideogenerator.service;
 import com.example.soravideogenerator.config.AzureOpenAIConfig;
 import com.example.soravideogenerator.model.SoraApiRequest;
 import com.example.soravideogenerator.model.SoraApiResponse;
+import com.example.soravideogenerator.model.VideoRequest;
 import com.example.soravideogenerator.model.VideoResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,16 +32,21 @@ public class SoraVideoService {
         this.webClient = azureOpenAIWebClient;
         this.config = config;
     }
-    
-    /**
+      /**
      * Generate a video using the Azure OpenAI Sora API
-     * @param prompt The user prompt for video generation
+     * @param videoRequest The video request containing prompt, resolution, and duration
      * @return Mono<VideoResponse> containing the job details or error information
      */
-    public Mono<VideoResponse> generateVideo(String prompt) {
-        logger.info("Starting video generation for prompt: {}", prompt);
+    public Mono<VideoResponse> generateVideo(VideoRequest videoRequest) {
+        logger.info("Starting video generation for prompt: {} with resolution: {} and duration: {}s", 
+                   videoRequest.getPrompt(), videoRequest.getResolution(), videoRequest.getDuration());
         
-        SoraApiRequest request = new SoraApiRequest(prompt);
+        SoraApiRequest request = new SoraApiRequest(
+            videoRequest.getPrompt(),
+            videoRequest.getWidth(),
+            videoRequest.getHeight(),
+            videoRequest.getDuration().toString()
+        );
         
         return webClient.post()
             .uri(uriBuilder -> uriBuilder

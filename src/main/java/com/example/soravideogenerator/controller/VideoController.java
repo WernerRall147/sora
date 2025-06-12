@@ -46,8 +46,7 @@ public class VideoController {
         model.addAttribute("videoRequest", new VideoRequest());
         return "index";
     }
-    
-    /**
+      /**
      * Handle video generation form submission
      */
     @PostMapping("/generate")
@@ -56,18 +55,22 @@ public class VideoController {
                                      Model model) {
         
         if (bindingResult.hasErrors()) {
-            model.addAttribute("error", "Please provide a valid prompt");
+            model.addAttribute("error", "Please check your input and try again");
+            model.addAttribute("videoRequest", videoRequest);
             return Mono.just("index");
         }
         
-        logger.info("Received video generation request with prompt: {}", videoRequest.getPrompt());
+        logger.info("Received video generation request with prompt: {}, resolution: {}, duration: {}s", 
+                   videoRequest.getPrompt(), videoRequest.getResolution(), videoRequest.getDuration());
         
-        return soraVideoService.generateVideo(videoRequest.getPrompt())
+        return soraVideoService.generateVideo(videoRequest)
             .map(response -> {
                 if (response.isSuccess()) {
                     model.addAttribute("jobId", response.getJobId());
                     model.addAttribute("status", response.getStatus());
                     model.addAttribute("message", "Video generation started successfully!");
+                    model.addAttribute("resolution", videoRequest.getResolution());
+                    model.addAttribute("duration", videoRequest.getDuration());
                     return "result";
                 } else {
                     model.addAttribute("error", response.getMessage());

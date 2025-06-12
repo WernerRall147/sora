@@ -71,9 +71,7 @@
             <div th:if="${message}" class="alert alert-success d-flex align-items-center mb-4" role="alert">
                 <i class="fas fa-check-circle me-3"></i>
                 <div th:text="${message}"></div>
-            </div>
-
-            <!-- Job Information -->
+            </div>            <!-- Job Information -->
             <div class="info-card p-4 mb-4">
                 <h5 class="fw-bold text-dark mb-3">
                     <i class="fas fa-info-circle me-2"></i>Job Details
@@ -86,6 +84,14 @@
                     <div class="col-md-6 mb-3">
                         <strong>Status:</strong>
                         <span th:text="${status}" class="badge bg-info ms-2"></span>
+                    </div>
+                    <div class="col-md-6 mb-3" th:if="${resolution}">
+                        <strong>Resolution:</strong>
+                        <span th:text="${resolution}" class="ms-2 text-muted"></span>
+                    </div>
+                    <div class="col-md-6 mb-3" th:if="${duration}">
+                        <strong>Duration:</strong>
+                        <span th:text="${duration} + ' seconds'" class="ms-2 text-muted"></span>
                     </div>
                 </div>
             </div>

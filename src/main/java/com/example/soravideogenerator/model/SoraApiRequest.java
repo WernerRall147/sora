@@ -8,10 +8,10 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class SoraApiRequest {
     
     private final String model = "sora";
-    private final String height = "1080";
-    private final String width = "1080";
+    private String height;
+    private String width;
     @JsonProperty("n_seconds")
-    private final String nSeconds = "5";
+    private String nSeconds;
     @JsonProperty("n_variants")
     private final String nVariants = "1";
     
@@ -19,8 +19,11 @@ public class SoraApiRequest {
     
     public SoraApiRequest() {}
     
-    public SoraApiRequest(String prompt) {
+    public SoraApiRequest(String prompt, String width, String height, String duration) {
         this.prompt = prompt;
+        this.width = width;
+        this.height = height;
+        this.nSeconds = duration;
     }
     
     public String getModel() {
@@ -31,12 +34,24 @@ public class SoraApiRequest {
         return height;
     }
     
+    public void setHeight(String height) {
+        this.height = height;
+    }
+    
     public String getWidth() {
         return width;
     }
     
+    public void setWidth(String width) {
+        this.width = width;
+    }
+    
     public String getNSeconds() {
         return nSeconds;
+    }
+    
+    public void setNSeconds(String nSeconds) {
+        this.nSeconds = nSeconds;
     }
     
     public String getNVariants() {

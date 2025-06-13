@@ -12,6 +12,93 @@ A Java Spring Boot web application that generates Sora videos using Azure OpenAI
 - 🔒 **Secure**: Uses Azure managed identity for authentication in production
 - 📊 **Monitoring**: Includes health checks and logging for production deployment
 - 🚀 **Container Ready**: Dockerized for easy deployment to Azure Container Apps
+- 💰 **Cost Estimation**: Real-time cost preview and detailed cost breakdown with warnings
+
+## Cost Estimation
+
+The Sora Video Generator includes a comprehensive cost estimation system that provides users with transparent pricing information before and after video generation.
+
+### Real-Time Cost Preview
+
+- **Dynamic Updates**: Cost estimates update automatically as you change resolution and duration settings
+- **Interactive Feedback**: See cost changes in real-time on the main form
+- **Pre-Generation Awareness**: Know the cost before submitting your video generation request
+
+### Cost Calculation Details
+
+The cost estimator is based on Azure AI Studio pricing as of mid-2025:
+
+#### **Base Pricing Model**
+- **Base Cost**: $0.06 per second of generated video
+- **Additional Factors**: Costs may vary by Azure region and subscription type
+- **Billing**: You are only charged when video generation is successful
+
+#### **Cost Examples**
+| Resolution | Duration | Estimated Cost |
+|------------|----------|----------------|
+| 480x480 | 5 seconds | $0.30 |
+| 1080x1080 | 10 seconds | $0.60 |
+| 1920x1080 | 10 seconds | $0.60 |
+| 720x1280 | 15 seconds | $0.90 |
+| 1920x1080 | 20 seconds | Not allowed (max 10s) |
+
+### Cost Breakdown Features
+
+After submitting a video generation request, users receive:
+
+1. **Detailed Cost Information**
+   - Total estimated cost for the specific video
+   - Per-second breakdown showing calculation method
+   - Resolution and duration specifications
+
+2. **Cost Warnings**
+   - Alerts for high-cost configurations (>$1.00)
+   - Notifications about resolution-specific limitations
+   - Recommendations for cost optimization
+
+3. **Transparent Billing Information**
+   - Clear notes about when charges occur
+   - Information about potential cost variations
+   - Links to current Azure pricing documentation
+
+### Cost Estimation API
+
+The application includes a dedicated `CostEstimationService` that:
+
+- Calculates costs based on current pricing models
+- Provides detailed breakdown strings for user display
+- Generates appropriate warnings for expensive configurations
+- Supports future pricing model updates
+
+#### **Service Features**
+```java
+// Real-time cost calculation
+public BigDecimal calculateCost(int width, int height, int duration)
+
+// Detailed cost breakdown for display
+public String generateCostBreakdown(VideoRequest request, BigDecimal cost)
+
+// Cost warnings for expensive requests
+public String generateCostWarning(BigDecimal cost)
+```
+
+### Cost Optimization Tips
+
+1. **Start Small**: Begin with shorter durations (5-10 seconds) to minimize costs
+2. **Choose Appropriate Resolution**: Use the lowest resolution that meets your needs
+3. **Preview Costs**: Always check the cost estimate before submitting
+4. **Batch Processing**: Plan multiple videos to optimize overall costs
+
+### Pricing Accuracy Disclaimer
+
+**Important**: Cost estimates are based on pricing information available as of mid-2025 and may not reflect current Azure pricing. Actual costs may vary based on:
+
+- Azure region selection
+- Subscription type and discounts
+- Current Azure AI Studio pricing
+- Promotional pricing or credits
+
+Always verify current pricing through the Azure portal before generating expensive videos.
 
 ## Architecture
 
@@ -166,9 +253,16 @@ The application supports configurable parameters for video generation:
 2. **Enter a prompt** describing the video you want to generate
 3. **Select resolution** from the dropdown (9 options available)
 4. **Set duration** between 1-20 seconds (or 1-10 for 1920x1080)
-5. **Click "Generate Video"** to start the process
-6. **Check the status** of your video generation job
-7. **Download the video** once generation is complete
+5. **Review cost estimate** displayed in real-time as you adjust settings
+6. **Click "Generate Video"** to start the process and see detailed cost breakdown
+7. **Check the status** of your video generation job
+8. **Download the video** once generation is complete
+
+### Cost Awareness Tips
+
+- **Monitor Real-Time Costs**: Watch the cost estimate update as you change settings
+- **Cost Warnings**: Pay attention to warnings for expensive configurations (>$1.00)
+- **Billing Information**: Remember that you're only charged for successful video generation
 
 ### Video Specification Guidelines
 
@@ -221,7 +315,8 @@ src/
 │   │   │   ├── SoraApiRequest.java
 │   │   │   └── SoraApiResponse.java
 │   │   └── service/
-│   │       └── SoraVideoService.java
+│   │       ├── SoraVideoService.java
+│   │       └── CostEstimationService.java
 │   └── resources/
 │       ├── application.properties
 │       └── templates/
@@ -235,8 +330,9 @@ src/
 
 ### Key Components
 
-- **VideoController**: Handles web requests and form submissions with configurable video specifications
+- **VideoController**: Handles web requests and form submissions with configurable video specifications and cost estimation
 - **SoraVideoService**: Manages video generation API calls with user-selected parameters
+- **CostEstimationService**: Calculates costs, generates breakdowns, and provides cost warnings for video generation requests
 - **AzureOpenAIConfig**: Configuration for Azure OpenAI WebClient with 100MB buffer for large video downloads
 - **Model Classes**: Request/response DTOs with validation for resolution-duration combinations
 - **Custom Validation**: Enforces API restrictions (e.g., 1920x1080 max 10 seconds)

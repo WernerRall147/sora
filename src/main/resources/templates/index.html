@@ -151,9 +151,51 @@
                         <i class="fas fa-cog fa-spin me-2" style="display: none;" id="loadingIcon"></i>
                         <i class="fas fa-play me-2" id="playIcon"></i>
                         Generate Video
-                    </button>
-                </div>
+                    </button>                </div>
             </form>
+
+            <!-- Cost Estimation Preview -->
+            <div class="mt-4 p-4" style="background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%); border-radius: 15px; border: 2px solid #e1bee7;">
+                <h5 class="fw-bold text-dark mb-3">
+                    <i class="fas fa-calculator me-2 text-primary"></i>Estimated Cost Preview
+                </h5>
+                <div class="row align-items-center">
+                    <div class="col-md-8">                        <div id="costDisplay" class="h4 mb-1 text-primary fw-bold">
+                            ~$3.52
+                        </div>
+                        <small class="text-muted">
+                            <i class="fas fa-info-circle me-1"></i>
+                            Based on current selection (1080x1080, 5 seconds)
+                        </small>
+                    </div>
+                    <div class="col-md-4 text-end">
+                        <div class="btn btn-outline-primary btn-sm" data-bs-toggle="collapse" data-bs-target="#costBreakdown" aria-expanded="false">
+                            <i class="fas fa-chart-pie me-1"></i>View Breakdown
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Collapsible Cost Breakdown -->
+                <div class="collapse mt-3" id="costBreakdown">
+                    <div class="p-3" style="background: rgba(255,255,255,0.7); border-radius: 10px;">
+                        <h6 class="fw-bold mb-2 text-dark">Cost Breakdown:</h6>                        <ul class="list-unstyled mb-0" style="font-size: 0.9em;">
+                            <li id="promptCost">• Prompt submission: $0.02</li>
+                            <li id="generationCost">• Video generation: $2.50</li>
+                            <li id="storageCost">• Storage, egress & processing: $1.00</li>
+                        </ul>
+                        <hr class="my-2">
+                        <div class="fw-bold" id="totalCost">Total: $3.52</div>
+                    </div>
+                </div>
+                
+                <!-- Cost Warning Area -->
+                <div id="costWarningArea" class="mt-3" style="display: none;">
+                    <div class="alert alert-warning mb-0">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <span id="costWarningText"></span>
+                    </div>
+                </div>
+            </div>
 
             <!-- Technical Specifications -->
             <div class="mt-5 p-4 bg-light rounded-3">
@@ -193,8 +235,7 @@
             </div>
         </div>
     </div>    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        // Duration restriction handler
+    <script>        // Duration restriction handler
         function updateDurationRestrictions() {
             const resolutionSelect = document.getElementById('resolution');
             const durationInput = document.getElementById('duration');
@@ -218,17 +259,93 @@
                 durationWarning.style.display = 'none';
                 durationHelp.innerHTML = '<i class="fas fa-info-circle me-1"></i>Choose between 1-20 seconds';
             }
+            
+            // Update cost estimation after restriction changes
+            updateCostEstimation();
+        }
+
+        // Cost estimation handler
+        function updateCostEstimation() {
+            const resolutionSelect = document.getElementById('resolution');
+            const durationInput = document.getElementById('duration');
+            
+            const resolution = resolutionSelect.value || '1080x1080';
+            const duration = parseInt(durationInput.value) || 5;
+            
+            // Calculate estimated cost
+            const cost = calculateEstimatedCost(resolution, duration);
+            const breakdown = getCostBreakdown(resolution, duration, cost);
+            
+            // Update display
+            document.getElementById('costDisplay').textContent = `~$${cost.total.toFixed(2)}`;
+            document.getElementById('promptCost').textContent = `• Prompt submission: $${cost.prompt.toFixed(2)}`;
+            document.getElementById('generationCost').textContent = `• Video generation: $${cost.generation.toFixed(2)}`;
+            document.getElementById('storageCost').textContent = `• Storage, egress & processing: $${cost.storage.toFixed(2)}`;
+            document.getElementById('totalCost').textContent = `Total: $${cost.total.toFixed(2)}`;
+              // Update cost warning
+            const warningArea = document.getElementById('costWarningArea');
+            const warningText = document.getElementById('costWarningText');
+            
+            if (cost.total > 20) {
+                warningText.textContent = '🔥 EXPENSIVE ALERT: This video generation will cost over $20! Azure Sora pricing can get shockingly expensive for longer or higher-resolution videos. Consider shorter duration or lower resolution to significantly reduce costs.';
+                warningArea.style.display = 'block';
+            } else if (cost.total > 10) {
+                warningText.textContent = '⚠️ High cost alert: This video generation will cost over $10. For reference, a 15-second 1080p video typically costs $7.50. Consider optimizing your specifications.';
+                warningArea.style.display = 'block';
+            } else if (cost.total > 5) {
+                warningText.textContent = '💡 Cost notice: This generation will cost over $5. You can reduce costs with shorter duration or lower resolution.';
+                warningArea.style.display = 'block';
+            } else {
+                warningArea.style.display = 'none';
+            }
+            
+            // Update info text
+            const infoText = document.querySelector('#costDisplay').nextElementSibling;
+            infoText.innerHTML = `<i class="fas fa-info-circle me-1"></i>Based on current selection (${resolution}, ${duration} seconds)`;
+        }        // Calculate estimated cost based on resolution and duration
+        function calculateEstimatedCost(resolution, duration) {
+            const baseCosts = {
+                prompt: 0.02,
+                basePerMinute: 30.00,  // Updated to match server-side: $10-$80 range, using $30 average
+                storage: 1.00          // Updated: Storage, egress & processing overhead
+            };
+            
+            // Resolution multipliers (aligned with server-side)
+            const resolutionMultipliers = {
+                '480x480': 0.5, '480x854': 0.5, '854x480': 0.5,
+                '720x720': 0.8, '720x1280': 0.8, '1280x720': 0.8,
+                '1080x1080': 1.0, '1080x1920': 1.0,
+                '1920x1080': 3.0  // Premium pricing for landscape 1080p (2x-4x baseline)
+            };
+            
+            const multiplier = resolutionMultipliers[resolution] || 1.0;
+            const durationMinutes = duration / 60.0;
+            const generationCost = baseCosts.basePerMinute * durationMinutes * multiplier;
+            
+            return {
+                prompt: baseCosts.prompt,
+                generation: generationCost,
+                storage: baseCosts.storage,
+                total: baseCosts.prompt + generationCost + baseCosts.storage
+            };
+        }
+
+        function getCostBreakdown(resolution, duration, cost) {
+            return `• Prompt submission: $${cost.prompt.toFixed(2)}
+• Video generation (${duration}s at ${resolution}): $${cost.generation.toFixed(2)}
+• Storage & egress: $${cost.storage.toFixed(2)}
+• **Total estimated cost: $${cost.total.toFixed(2)}**`;
         }
 
         // Form validation
         (function() {
             'use strict';
-            window.addEventListener('load', function() {
-                // Initialize duration restrictions
+            window.addEventListener('load', function() {                // Initialize duration restrictions and cost estimation
                 updateDurationRestrictions();
                 
-                // Add event listener for resolution changes
+                // Add event listeners for real-time updates
                 document.getElementById('resolution').addEventListener('change', updateDurationRestrictions);
+                document.getElementById('duration').addEventListener('input', updateCostEstimation);
                 
                 var forms = document.getElementsByClassName('needs-validation');
                 var validation = Array.prototype.filter.call(forms, function(form) {

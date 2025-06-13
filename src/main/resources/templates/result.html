@@ -92,7 +92,40 @@
                     <div class="col-md-6 mb-3" th:if="${duration}">
                         <strong>Duration:</strong>
                         <span th:text="${duration} + ' seconds'" class="ms-2 text-muted"></span>
+                    </div>                </div>
+            </div>
+
+            <!-- Cost Estimation -->
+            <div th:if="${estimatedCost}" class="info-card p-4 mb-4">
+                <h5 class="fw-bold text-dark mb-3">
+                    <i class="fas fa-dollar-sign me-2"></i>Estimated Cost
+                </h5>
+                  <!-- Cost Warning (if applicable) -->
+                <div th:if="${costWarning != null and !#strings.isEmpty(costWarning)}" 
+                     class="alert alert-warning d-flex align-items-center mb-3" role="alert">
+                    <i class="fas fa-exclamation-triangle me-3"></i>
+                    <div th:text="${costWarning}"></div>
+                </div>
+                
+                <!-- Cost Breakdown -->
+                <div class="row">
+                    <div class="col-12 mb-3">
+                        <div class="cost-breakdown p-3" style="background: #f8f9fa; border-radius: 10px; border-left: 4px solid #007bff;">
+                            <h6 class="fw-bold mb-2 text-primary">Cost Breakdown:</h6>
+                            <div th:utext="${#strings.replace(costBreakdown, '&#10;', '<br>')}" 
+                                 style="font-family: 'Courier New', monospace; font-size: 0.9em; line-height: 1.4;"></div>
+                        </div>
                     </div>
+                </div>
+                
+                <!-- Cost Information -->
+                <div class="alert alert-light border-0 mb-0">
+                    <small class="text-muted">
+                        <i class="fas fa-info-circle me-1"></i>
+                        <strong>Note:</strong> This is an estimate based on Azure AI Studio pricing as of mid-2025. 
+                        Actual costs may vary depending on Azure region, subscription type, and current pricing models. 
+                        You are charged only when the video generation is successful.
+                    </small>
                 </div>
             </div>
 

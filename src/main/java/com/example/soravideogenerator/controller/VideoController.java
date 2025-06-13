@@ -3,6 +3,7 @@ package com.example.soravideogenerator.controller;
 import com.example.soravideogenerator.model.VideoRequest;
 import com.example.soravideogenerator.model.VideoResponse;
 import com.example.soravideogenerator.service.SoraVideoService;
+import com.example.soravideogenerator.service.CostEstimationService;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,6 +20,7 @@ import reactor.core.publisher.Mono;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.math.BigDecimal;
 import java.net.URL;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -30,12 +32,13 @@ import java.time.format.DateTimeFormatter;
 public class VideoController {
     
     private static final Logger logger = LoggerFactory.getLogger(VideoController.class);
-    
-    private final SoraVideoService soraVideoService;
+      private final SoraVideoService soraVideoService;
+    private final CostEstimationService costEstimationService;
     
     @Autowired
-    public VideoController(SoraVideoService soraVideoService) {
+    public VideoController(SoraVideoService soraVideoService, CostEstimationService costEstimationService) {
         this.soraVideoService = soraVideoService;
+        this.costEstimationService = costEstimationService;
     }
     
     /**
@@ -59,9 +62,15 @@ public class VideoController {
             model.addAttribute("videoRequest", videoRequest);
             return Mono.just("index");
         }
-        
-        logger.info("Received video generation request with prompt: {}, resolution: {}, duration: {}s", 
+          logger.info("Received video generation request with prompt: {}, resolution: {}, duration: {}s", 
                    videoRequest.getPrompt(), videoRequest.getResolution(), videoRequest.getDuration());
+        
+        // Calculate estimated cost
+        BigDecimal estimatedCost = costEstimationService.calculateEstimatedCost(
+            videoRequest.getResolution(), videoRequest.getDuration());
+        String costBreakdown = costEstimationService.getCostBreakdown(
+            videoRequest.getResolution(), videoRequest.getDuration());
+        String costWarning = costEstimationService.getCostWarning(estimatedCost);
         
         return soraVideoService.generateVideo(videoRequest)
             .map(response -> {
@@ -71,6 +80,12 @@ public class VideoController {
                     model.addAttribute("message", "Video generation started successfully!");
                     model.addAttribute("resolution", videoRequest.getResolution());
                     model.addAttribute("duration", videoRequest.getDuration());
+                    
+                    // Add cost estimation attributes
+                    model.addAttribute("estimatedCost", estimatedCost);
+                    model.addAttribute("costBreakdown", costBreakdown);
+                    model.addAttribute("costWarning", costWarning);
+                    
                     return "result";
                 } else {
                     model.addAttribute("error", response.getMessage());
@@ -78,7 +93,12 @@ public class VideoController {
                     return "index";
                 }
             })
-            .onErrorReturn("error");
+            .onErrorResume(throwable -> {
+                logger.error("Error during video generation: ", throwable);
+                model.addAttribute("error", "An error occurred while processing your request. Please try again.");
+                model.addAttribute("videoRequest", videoRequest);
+                return Mono.just("index");
+            });
     }
     
     /**

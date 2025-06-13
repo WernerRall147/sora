@@ -26,21 +26,29 @@ The Sora Video Generator includes a comprehensive cost estimation system that pr
 
 ### Cost Calculation Details
 
-The cost estimator is based on Azure AI Studio pricing as of mid-2025:
+The cost estimator is based on **Azure OpenAI Sora per-second pricing** as of June 2025:
 
-#### **Base Pricing Model**
-- **Base Cost**: $0.06 per second of generated video
-- **Additional Factors**: Costs may vary by Azure region and subscription type
-- **Billing**: You are only charged when video generation is successful
+#### **Per-Second Pricing Structure**
+
+| **Resolution / Aspect** | **Cost per Second** |
+| ----------------------- | ------------------- |
+| **480 Square (480x480)** | $0.15 |
+| **480p (480x854, 854x480)** | $0.20 |
+| **720 Square (720x720)** | $0.30 |
+| **720p (720x1280, 1280x720)** | $0.45 - $0.50* |
+| **1080 Square (1080x1080)** | $0.60 - $0.75* |
+| **1080p (1080x1920, 1920x1080)** | $1.30 - $1.85* |
+
+**Variable Pricing**: Some resolutions have cost ranges based on duration tiers (1-5s, 6-10s, 11-15s, 16-20s). The application uses average pricing for estimates.
 
 #### **Cost Examples**
 | Resolution | Duration | Estimated Cost |
 |------------|----------|----------------|
-| 480x480 | 5 seconds | $0.30 |
-| 1080x1080 | 10 seconds | $0.60 |
-| 1920x1080 | 10 seconds | $0.60 |
-| 720x1280 | 15 seconds | $0.90 |
-| 1920x1080 | 20 seconds | Not allowed (max 10s) |
+| 480x480 | 5 seconds | $0.75 |
+| 720x720 | 10 seconds | $3.00 |
+| 1080x1080 | 10 seconds | $6.75 (avg) |
+| 1080x1920 | 5 seconds | $8.13 (avg) |
+| 1920x1080 | 10 seconds | $15.75 (avg) |
 
 ### Cost Breakdown Features
 
@@ -52,8 +60,9 @@ After submitting a video generation request, users receive:
    - Resolution and duration specifications
 
 2. **Cost Warnings**
-   - Alerts for high-cost configurations (>$1.00)
-   - Notifications about resolution-specific limitations
+   - Alerts for high-cost configurations (>$8.00)
+   - Notifications for very expensive requests (>$15.00)
+   - Critical alerts for extremely expensive requests (>$25.00)
    - Recommendations for cost optimization
 
 3. **Transparent Billing Information**
@@ -84,14 +93,18 @@ public String generateCostWarning(BigDecimal cost)
 
 ### Cost Optimization Tips
 
-1. **Start Small**: Begin with shorter durations (5-10 seconds) to minimize costs
-2. **Choose Appropriate Resolution**: Use the lowest resolution that meets your needs
-3. **Preview Costs**: Always check the cost estimate before submitting
-4. **Batch Processing**: Plan multiple videos to optimize overall costs
+1. **Start Small**: Begin with shorter durations (3-5 seconds) and lower resolutions to minimize costs
+2. **Choose Appropriate Resolution**: 
+   - Use 480x480 ($0.15/sec) for testing and prototyping
+   - Use 720x720 ($0.30/sec) for good quality at moderate cost
+   - Reserve 1080p ($1.30-$1.85/sec) for final production videos
+3. **Preview Costs**: Always check the cost estimate - 1080p videos can cost $6.50-$37+ depending on duration
+4. **Duration Management**: Even 10 seconds at 1080p costs $13-$18.50
+5. **Batch Processing**: Plan multiple shorter videos rather than one long expensive video
 
 ### Pricing Accuracy Disclaimer
 
-**Important**: Cost estimates are based on pricing information available as of mid-2025 and may not reflect current Azure pricing. Actual costs may vary based on:
+**Important**: Cost estimates are based on **Azure OpenAI Sora pricing as of June 2025** and reflect the most current per-second pricing structure. Actual costs may vary based on:
 
 - Azure region selection
 - Subscription type and discounts
@@ -260,9 +273,11 @@ The application supports configurable parameters for video generation:
 
 ### Cost Awareness Tips
 
-- **Monitor Real-Time Costs**: Watch the cost estimate update as you change settings
-- **Cost Warnings**: Pay attention to warnings for expensive configurations (>$1.00)
-- **Billing Information**: Remember that you're only charged for successful video generation
+- **Monitor Real-Time Costs**: Watch the cost estimate update as you change settings - 1080p can quickly become expensive
+- **Cost Warnings**: Pay attention to warnings for expensive configurations (>$8.00, >$15.00, >$25.00)
+- **Resolution Impact**: Higher resolutions have dramatically higher costs (480p: $0.15/sec vs 1080p: $1.30-$1.85/sec)
+- **Duration Impact**: Every second matters - a 20-second 1080p video can cost $26-$37
+- **Billing Information**: You're only charged for successful video generation
 
 ### Video Specification Guidelines
 

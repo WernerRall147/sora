@@ -262,9 +262,7 @@
             
             // Update cost estimation after restriction changes
             updateCostEstimation();
-        }
-
-        // Cost estimation handler
+        }        // Cost estimation handler
         function updateCostEstimation() {
             const resolutionSelect = document.getElementById('resolution');
             const durationInput = document.getElementById('duration');
@@ -274,26 +272,26 @@
             
             // Calculate estimated cost
             const cost = calculateEstimatedCost(resolution, duration);
-            const breakdown = getCostBreakdown(resolution, duration, cost);
+            const costPerSecond = cost.generation / duration;
             
             // Update display
             document.getElementById('costDisplay').textContent = `~$${cost.total.toFixed(2)}`;
-            document.getElementById('promptCost').textContent = `• Prompt submission: $${cost.prompt.toFixed(2)}`;
-            document.getElementById('generationCost').textContent = `• Video generation: $${cost.generation.toFixed(2)}`;
-            document.getElementById('storageCost').textContent = `• Storage, egress & processing: $${cost.storage.toFixed(2)}`;
+            document.getElementById('promptCost').textContent = `• Resolution: ${resolution}`;
+            document.getElementById('generationCost').textContent = `• Duration: ${duration} seconds`;
+            document.getElementById('storageCost').textContent = `• Rate: $${costPerSecond.toFixed(3)} per second`;
             document.getElementById('totalCost').textContent = `Total: $${cost.total.toFixed(2)}`;
-              // Update cost warning
+              // Update cost warning with new thresholds
             const warningArea = document.getElementById('costWarningArea');
             const warningText = document.getElementById('costWarningText');
             
-            if (cost.total > 20) {
-                warningText.textContent = '🔥 EXPENSIVE ALERT: This video generation will cost over $20! Azure Sora pricing can get shockingly expensive for longer or higher-resolution videos. Consider shorter duration or lower resolution to significantly reduce costs.';
+            if (cost.total > 25) {
+                warningText.textContent = '🔥 EXPENSIVE ALERT: This video generation will cost over $25! Azure OpenAI Sora pricing escalates quickly for longer or higher-resolution videos. Consider shorter duration or lower resolution to significantly reduce costs.';
                 warningArea.style.display = 'block';
-            } else if (cost.total > 10) {
-                warningText.textContent = '⚠️ High cost alert: This video generation will cost over $10. For reference, a 15-second 1080p video typically costs $7.50. Consider optimizing your specifications.';
+            } else if (cost.total > 15) {
+                warningText.textContent = '⚠️ High cost alert: This video generation will cost over $15. For reference, a 10-second 1080p video costs $13-$18.50. Consider optimizing your specifications.';
                 warningArea.style.display = 'block';
-            } else if (cost.total > 5) {
-                warningText.textContent = '💡 Cost notice: This generation will cost over $5. You can reduce costs with shorter duration or lower resolution.';
+            } else if (cost.total > 8) {
+                warningText.textContent = '💡 Cost notice: This generation will cost over $8. Higher resolutions like 1080p can be expensive at $1.30-$1.85 per second.';
                 warningArea.style.display = 'block';
             } else {
                 warningArea.style.display = 'none';
@@ -302,38 +300,35 @@
             // Update info text
             const infoText = document.querySelector('#costDisplay').nextElementSibling;
             infoText.innerHTML = `<i class="fas fa-info-circle me-1"></i>Based on current selection (${resolution}, ${duration} seconds)`;
-        }        // Calculate estimated cost based on resolution and duration
+        }// Calculate estimated cost based on resolution and duration
         function calculateEstimatedCost(resolution, duration) {
-            const baseCosts = {
-                prompt: 0.02,
-                basePerMinute: 30.00,  // Updated to match server-side: $10-$80 range, using $30 average
-                storage: 1.00          // Updated: Storage, egress & processing overhead
+            // Per-second pricing based on Azure OpenAI Sora pricing (June 2025)
+            const costPerSecond = {
+                '480x480': 0.15,      // 480 Square
+                '480x854': 0.20,      // 480p Portrait
+                '854x480': 0.20,      // 480p Landscape
+                '720x720': 0.30,      // 720 Square
+                '720x1280': 0.475,    // 720p Portrait (average of 0.45-0.50)
+                '1280x720': 0.475,    // 720p Landscape (average of 0.45-0.50)
+                '1080x1080': 0.675,   // 1080 Square (average of 0.60-0.75)
+                '1080x1920': 1.575,   // 1080p Portrait (average of 1.30-1.85)
+                '1920x1080': 1.575    // 1080p Landscape (average of 1.30-1.85)
             };
             
-            // Resolution multipliers (aligned with server-side)
-            const resolutionMultipliers = {
-                '480x480': 0.5, '480x854': 0.5, '854x480': 0.5,
-                '720x720': 0.8, '720x1280': 0.8, '1280x720': 0.8,
-                '1080x1080': 1.0, '1080x1920': 1.0,
-                '1920x1080': 3.0  // Premium pricing for landscape 1080p (2x-4x baseline)
-            };
-            
-            const multiplier = resolutionMultipliers[resolution] || 1.0;
-            const durationMinutes = duration / 60.0;
-            const generationCost = baseCosts.basePerMinute * durationMinutes * multiplier;
+            const ratePerSecond = costPerSecond[resolution] || 1.575; // Default to 1080p pricing
+            const totalCost = ratePerSecond * duration;
             
             return {
-                prompt: baseCosts.prompt,
-                generation: generationCost,
-                storage: baseCosts.storage,
-                total: baseCosts.prompt + generationCost + baseCosts.storage
+                prompt: 0,        // No separate prompt cost in new pricing
+                generation: totalCost,
+                storage: 0,       // No separate storage cost in new pricing
+                total: totalCost
             };
-        }
-
-        function getCostBreakdown(resolution, duration, cost) {
-            return `• Prompt submission: $${cost.prompt.toFixed(2)}
-• Video generation (${duration}s at ${resolution}): $${cost.generation.toFixed(2)}
-• Storage & egress: $${cost.storage.toFixed(2)}
+        }        function getCostBreakdown(resolution, duration, cost) {
+            const costPerSecond = cost.generation / duration;
+            return `• Resolution: ${resolution}
+• Duration: ${duration} seconds
+• Rate: $${costPerSecond.toFixed(3)} per second
 • **Total estimated cost: $${cost.total.toFixed(2)}**`;
         }
 

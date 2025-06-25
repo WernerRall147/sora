@@ -403,50 +403,6 @@ azd logs
 az containerapp logs show --name <app-name> --resource-group <rg-name>
 ```
 
-## Contributing
-
-### Setting up CI/CD with GitHub Actions
-
-This repository includes a comprehensive CI/CD pipeline using GitHub Actions. To set it up:
-
-1. **Create Azure Service Principal**
-   ```bash
-   az ad sp create-for-rbac --name "sora-video-generator-sp" --role contributor \
-     --scopes /subscriptions/<subscription-id> --sdk-auth
-   ```
-
-2. **Configure GitHub Secrets**
-   Go to your repository Settings > Secrets and variables > Actions, and add:
-
-   - `AZURE_CREDENTIALS`: Output from the service principal creation
-   - `AZURE_ENV_NAME`: Your azd environment name (from `.azure` folder)
-   - `AZURE_LOCATION`: Azure region (e.g., `eastus`)
-   - `AZURE_SUBSCRIPTION_ID`: Your Azure subscription ID
-   - `AZURE_OPENAI_ENDPOINT`: Your Azure OpenAI endpoint URL
-   - `AZURE_OPENAI_API_KEY`: Your Azure OpenAI API key
-   - `AZURE_CLIENT_ID`: Service principal client ID
-   - `AZURE_CLIENT_SECRET`: Service principal client secret
-   - `AZURE_TENANT_ID`: Your Azure tenant ID
-
-3. **Pipeline Features**
-   - **Automated Testing**: Runs unit tests on every push/PR
-   - **Security Scanning**: OWASP dependency check and CodeQL analysis
-   - **Build & Deploy**: Automatically deploys to Azure on main branch
-   - **Docker Integration**: Builds and pushes to Azure Container Registry
-
-4. **Triggering Deployments**
-   - Push to `main` branch triggers automatic deployment
-   - Pull requests run tests and security scans
-   - Manual deployment via GitHub Actions UI
-
-### Local Development
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests if applicable
-5. Submit a pull request
-
 ## License
 
 This project is licensed under the MIT License. See the LICENSE file for details.

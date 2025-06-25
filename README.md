@@ -127,7 +127,7 @@ Always verify current pricing through the Azure portal before generating expensi
 
 - Java 17 or later
 - Maven 3.6 or later
-- Azure OpenAI API access with Sora model
+- Azure OpenAI API access with Sora model, once deployed you can get the instance target URI, but you must remove the "/openai/v1/video/generations/jobs?api-version=preview"
 - Azure CLI (for deployment)
 - Azure Developer CLI (recommended)
 
@@ -142,13 +142,14 @@ Always verify current pricing through the Azure portal before generating expensi
 2. **Set up environment variables**
    ```bash
    cp .env.example .env
-   # Edit .env with your Azure OpenAI credentials
+   # Edit .env with your Azure OpenAI credentials, make sure to use the base URL and not the entire SORA instance URL. Remove everything after the main FQDN eg: "/openai/v1/video/generations/jobs?api-version=preview"       must be removed from both strings in your .env and your azd environment variables 
    ```
 
 3. **Configure application properties**
    Update `src/main/resources/application.properties` with your Azure OpenAI endpoint and API key:
    ```properties
-   azure.openai.endpoint=https://your-openai-resource.cognitiveservices.azure.com
+   azure.openai.endpoint=https://your-openai-resource.cognitiveservices.azure.com. 
+   Make sure to use the base URL and not the entire SORA instance URL. Remove everything after the main FQDN eg: "/openai/v1/video/generations/jobs?api-version=preview" must be removed from both strings in your .env       files and your azd environment variables 
    azure.openai.api-key=your_api_key_here
    ```
 
@@ -198,6 +199,7 @@ This application is designed to be deployed to Azure Container Apps using Azure 
 3. **Set environment variables**
    ```bash
    azd env set AZURE_OPENAI_ENDPOINT "https://your-resource.cognitiveservices.azure.com"
+   Make sure to use the base URL and not the entire SORA instance URL. Remove everything after the main FQDN eg: "/openai/v1/video/generations/jobs?api-version=preview" must be removed from both strings in your .env       files and your azd environment variables 
    azd env set AZURE_OPENAI_API_KEY "your_api_key_here"
    ```
 

@@ -2,6 +2,15 @@
 
 A Java Spring Boot web application that generates Sora videos using Azure OpenAI API. This application provides a user-friendly web interface for creating AI-generated videos with **configurable video specifications** including resolution and duration.
 
+## See It In Action
+
+Transform your creative ideas into stunning AI-generated videos with just a few clicks. From prompt to playback, experience the power of Azure OpenAI's Sora model through an intuitive web interface.
+
+| **Video Generation Interface** | **Generated Video Output** |
+|:------------------------------:|:---------------------------:|
+| ![Video Generation Interface](img/generation.webp) | ![Generated Video Output](img/output.webp) |
+| *Enter your prompt, select resolution and duration, then generate your video with real-time cost estimation* | *Watch your AI-generated video come to life - ready to download and share* |
+
 ## Features
 
 - 🎥 **Video Generation**: Create videos using Azure OpenAI's Sora model

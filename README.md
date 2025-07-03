@@ -124,9 +124,10 @@ Always verify current pricing through the Azure portal before generating expensi
 
 ## Architecture
 
-- **Backend**: Java 17 + Spring Boot 3.5.0
+- **Backend**: Java 17 + Spring Boot 3.5.0 with dotenv-java for environment variable loading
 - **Frontend**: Thymeleaf templates with Bootstrap 5
 - **HTTP Client**: Spring WebFlux for reactive API calls
+- **Configuration**: Environment-based configuration with no hardcoded URLs
 - **Deployment**: Azure Container Apps with Container Registry
 - **Monitoring**: Spring Boot Actuator with Azure Log Analytics
 
@@ -149,20 +150,26 @@ Always verify current pricing through the Azure portal before generating expensi
    ```
 
 2. **Set up environment variables**
+   Create a `.env` file in the root directory with your Azure OpenAI credentials:
    ```bash
-   cp .env.example .env
+   # Azure OpenAI Configuration
+   AZURE_OPENAI_ENDPOINT=https://your-resource.cognitiveservices.azure.com
+   AZURE_OPENAI_API_KEY=your_api_key_here
+   AZURE_OPENAI_API_VERSION=preview
+
+   # Azure Configuration
+   AZURE_ENV_NAME=your-env-name
+   AZURE_LOCATION=eastus
+
+   # Application Configuration
+   SERVER_PORT=8080
+   SPRING_PROFILES_ACTIVE=dev
    ```
 
-      > **Note**: Edit `.env` with your Azure OpenAI credentials. Make sure to use the base URL and not the entire SORA instance URL. Remove everything after the main FQDN (e.g., `/openai/v1/video/generations/jobs?api-version=preview` must be removed from both strings in your `.env` and your azd environment variables).
+   > **Important**: Use only the base URL for the endpoint (e.g., `https://your-resource.cognitiveservices.azure.com`). Do **not** include the full API path like `/openai/v1/video/generations/jobs?api-version=preview`.
 
-3. **Configure application properties**
-   Update `src/main/resources/application.properties` with your Azure OpenAI endpoint and API key:
-   ```properties
-   azure.openai.endpoint=https://your-openai-resource.cognitiveservices.azure.com
-   azure.openai.api-key=your_api_key_here
-   ```
-
-   > **Note**: Make sure to use the base URL and not the entire SORA instance URL. Remove everything after the main FQDN eg: "/openai/v1/video/generations/jobs?api-version=preview" must be removed from both strings in your .env files and your azd environment variables 
+3. **Environment Variable Loading**
+   The application automatically loads environment variables from the `.env` file using the dotenv-java library. No manual configuration of `application.properties` is required - all sensitive configuration is handled through environment variables for security. 
 
 4. **Run the application**
    ```bash
@@ -211,12 +218,11 @@ This application is designed to be deployed to Azure Container Apps using Azure 
    ```bash
    azd env set AZURE_OPENAI_ENDPOINT "https://your-resource.cognitiveservices.azure.com"
    azd env set AZURE_OPENAI_API_KEY "your_api_key_here"
-   ```bash
-   azd env set AZURE_OPENAI_ENDPOINT "https://your-resource.cognitiveservices.azure.com"
-   azd env set AZURE_OPENAI_API_KEY "your_api_key_here"
+   azd env set AZURE_OPENAI_API_VERSION "preview"
+   azd env set AZURE_LOCATION "eastus"
    ```
 
-   > **Note**: Make sure to use the base URL and not the entire SORA instance URL. Remove everything after the main FQDN eg: "/openai/v1/video/generations/jobs?api-version=preview" must be removed from both strings in your .env files and your azd environment variables 
+   > **Important**: Use only the base URL for the endpoint (e.g., `https://your-resource.cognitiveservices.azure.com`). Do **not** include the full API path like `/openai/v1/video/generations/jobs?api-version=preview`. 
 
 4. **Deploy to Azure**
    ```bash
@@ -245,13 +251,25 @@ This application is designed to be deployed to Azure Container Apps using Azure 
 
 ### Environment Variables
 
+The application uses environment variables for all configuration to ensure security and flexibility across different environments (local development, Azure deployment). All sensitive configuration is loaded from `.env` files locally or Azure environment variables in production.
+
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `AZURE_OPENAI_ENDPOINT` | Azure OpenAI service endpoint | Required |
+| `AZURE_OPENAI_ENDPOINT` | Azure OpenAI service endpoint (base URL only) | Required |
 | `AZURE_OPENAI_API_KEY` | Azure OpenAI API key | Required |
 | `AZURE_OPENAI_API_VERSION` | API version | `preview` |
 | `SERVER_PORT` | Application port | `8080` |
 | `SPRING_PROFILES_ACTIVE` | Spring profile | `dev` |
+| `AZURE_ENV_NAME` | Azure environment name | Required for deployment |
+| `AZURE_LOCATION` | Azure region | Required for deployment |
+
+### No Hardcoded URLs
+
+The application follows security best practices by:
+- Using environment variables for all external service URLs
+- Loading configuration from `.env` files locally using dotenv-java
+- Using Azure environment variables in production deployment
+- Never storing sensitive information in source code or configuration files
 
 ### Video Generation Parameters
 
@@ -365,7 +383,8 @@ src/
 - **VideoController**: Handles web requests and form submissions with configurable video specifications and cost estimation
 - **SoraVideoService**: Manages video generation API calls with user-selected parameters
 - **CostEstimationService**: Calculates costs, generates breakdowns, and provides cost warnings for video generation requests
-- **AzureOpenAIConfig**: Configuration for Azure OpenAI WebClient with 100MB buffer for large video downloads
+- **AzureOpenAIConfig**: Configuration for Azure OpenAI WebClient with 100MB buffer for large video downloads - uses environment variables for all endpoints and API keys
+- **EnvironmentConfig**: Static configuration loader that ensures `.env` files are loaded before Spring Boot starts
 - **Model Classes**: Request/response DTOs with validation for resolution-duration combinations
 - **Custom Validation**: Enforces API restrictions (e.g., 1920x1080 max 10 seconds)
 
@@ -374,14 +393,22 @@ src/
 ### Common Issues
 
 1. **Azure OpenAI API Key Issues**
-   - Verify your API key is correct
-   - Check endpoint URL format
-   - Ensure your subscription has access to Sora model
+   - Verify your API key is correct and has Sora access
+   - Check endpoint URL format (use base URL only, not full API path)
+   - Ensure environment variables are properly set in `.env` file or Azure environment
+   - Verify that Azure environment and local `.env` use the same endpoint
 
 2. **Container App Deployment Issues**
    - Check container registry permissions
    - Verify managed identity configuration
    - Review application logs in Azure portal
+   - Ensure Azure location consistency between environment variables and existing resources
+
+3. **Environment Variable Loading Issues**
+   - Verify `.env` file is in the project root directory
+   - Check that environment variables are correctly set in Azure (use `azd env get-values`)
+   - Ensure no hardcoded URLs remain in configuration files
+   - Verify dotenv-java dependency is included in Maven build
 
 3. **Video Generation Timeouts**
    - Video generation can take 2-5 minutes

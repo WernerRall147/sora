@@ -136,9 +136,11 @@ Always verify current pricing through the Azure portal before generating expensi
 
 - Java 17 or later
 - Maven 3.6 or later
-- Azure OpenAI API access with Sora model, once deployed you can get the instance target URI, but you must remove the "/openai/v1/video/generations/jobs?api-version=preview"
 - Azure CLI (for deployment)
 - Azure Developer CLI (recommended)
+- Azure subscription with permission to create OpenAI resources
+
+For the **one-click deployment script**, the Azure OpenAI resource and Sora model will be created automatically. Otherwise, you'll need Azure OpenAI API access with the Sora model.
 
 ### Local Development
 
@@ -186,7 +188,37 @@ Always verify current pricing through the Azure portal before generating expensi
 
 This application is designed to be deployed to Azure Container Apps using Azure Developer CLI.
 
-### Using Azure Developer CLI (Recommended)
+### One-Click Deployment (Recommended)
+
+The simplest way to deploy the entire application, including creating the Azure OpenAI resource with Sora model:
+
+1. **Run the deployment script**
+   ```bash
+   # Using PowerShell script
+   ./deploy.ps1
+   
+   # Or using the batch file (Windows)
+   deploy.bat
+   ```
+
+2. **What the one-click deployment does:**
+   - Creates the Azure OpenAI resource in East US 2
+   - Deploys the Sora model
+   - Updates the .env file with actual credentials
+   - Builds the Java application
+   - Deploys all infrastructure to Azure
+   - Provides the URL to access your application
+
+3. **Custom deployment options**
+   ```bash
+   # Specify resource group name and location
+   ./deploy.ps1 -ResourceGroupName "MySoraRG" -Location "eastus2"
+   
+   # Specify OpenAI resource name and environment name
+   ./deploy.ps1 -OpenAIResourceName "my-sora-openai" -EnvironmentName "production"
+   ```
+
+### Using Azure Developer CLI (Manual Approach)
 
 1. **Install Azure Developer CLI**
    ```bash

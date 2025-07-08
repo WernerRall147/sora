@@ -39,7 +39,7 @@ param(
     
     [Parameter(Mandatory = $false)]
     [ValidatePattern('^[a-zA-Z0-9-]{2,64}$')]
-    [string]$OpenAIResourceName = "",
+    [string]$OpenAIResourceName = "sora-openai-default",
     
     [Parameter(Mandatory = $false)]
     [ValidatePattern('^[a-z0-9-]{2,64}$')]

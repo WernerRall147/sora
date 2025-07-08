@@ -108,3 +108,5 @@ __tablestorage__
 
 ### Azure Functions ###
 local.settings.json
+
+.fake
